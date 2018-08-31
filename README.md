@@ -158,7 +158,7 @@ test_rmse = np.sqrt(mean_squared_error(y_test_slick, y_pred_test_s))
 ### After testing various combinations of features and models, a random forest model performed best with the full feature set (amount, region, equipment type, and month) for the slickline jobs, whereas no model could outperform simply using the mean for the water jobs
 #### Slickline Model:
 - I tested various combinations of features (amount, equipment type, region, and month) and various parameters for the Linear, Lasso, Random Forest and Gradient Boosting algorithms
-- Random Forest and Gradient Boosting performed the best, with Random Forest edging out Gradient Boosting by a little
+- Random Forest and Gradient Boosting performed the best, with Random Forest edging out Gradient Boosting by a little in terms of RMSE
 - Both Random Forest and Gradient Boosting models performed the best with the full feature set, compared to reducing the feature set to just amount and equipment type
 - Optimal parameters were identified using a randomized grid search of 1000 iterations - parameters below:
 ```python
@@ -167,10 +167,19 @@ gbr_s = GradientBoostingRegressor(n_estimators=600, min_samples_split=15, min_sa
 ```
 **KEY TAKEAWAYS:**
 - The best RMSE on the test set for the Random Forest model was **0.354**, and the best for Gradient Boosting was **0.362**, which indicates that both models' predictions, on average, are ***~20 minutes*** off the actual work time value
-- These are very accurate results considering that the average slickline job ***3 hours and 20 minutes*** to complete
-- If the mean slickline job work time was used to predict the work time for a job, the RMSE is **0.863**, which is ***~50 minutes*** off the actual work time value
-- The machine learning models are more than twice as accurate as just using the mean work time, so there is evidence that the features are predictive and there is a benefit using a machine learning model to predict work time
+- These are very accurate results considering that the average slickline job takes ***3 hours and 20 minutes*** to complete
+- If the mean slickline job work time was used to predict the work time for a job, the RMSE is **0.863**, which is, on average, ***~50 minutes*** off the actual work time value
+- The machine learning models' predictions are more than twice as accurate compared to just using the mean work time, so there is evidence that the features are predictive and there is a benefit to using a machine learning model to predict work time
 
+**What features are the most important in predicting work time?**
+- Looking at the feature importances for the random forest reveals that amount is by far the most importance feature, with the rest of the features providing significantly less impact. Below are the top five in terms of importance.
+|**Feature** | **Importance** |
+|------------|----------------|
+|Amount      |  0.869          |
+|Business Equipment ID 235      |  0.060          |
+|February     |  0.013          |
+|January      |  0.008          |
+|Region - Other      |  0.005          |
 
 Question - would adding an estimated volume when the job is created help improve predictions for water jobs? NO improvement for water model, slight improvement for slickline.
 
