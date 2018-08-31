@@ -194,9 +194,9 @@ What features are the most important in predicting work time?
 |January          |  0.008          |
 |Region - Other   |  0.005          |
 
-
-
-
+Below are plots of the random forest model's predicted work times vs actual work times, and the residuals. Both indicate that the model error is similar across different equipment types, and work times.
+<img src="https://github.com/mikeirvine/Capstone-Job-Time-Predictor/blob/master/imgs/slick_pred_v_actual.png">
+<img src="https://github.com/mikeirvine/Capstone-Job-Time-Predictor/blob/master/imgs/rf_residual_plot.png">
 #### Water Model:
 - For the water model, a key challenge was not having a numerical feature since 'amount' only applied to slickline jobs, and 'volume' (of barrels of water) is not entered on a job record until after the work time is completed (so it cannot be used in the model as predictions are needed when the job is first created)
 - I tried various combinations of the feature set available for water jobs (region, equipment type, and job month) but each model's performance wasn't any better when compared to the mean work time for a water job
