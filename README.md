@@ -43,6 +43,11 @@ INSERT PICTURE
 
 ***PUT SOMETHING HERE TO SHOW GEOFENCE PICTURE AND HOW IT WORKS***
 
+PUT SOMETHING HERE WITH THE CONCEPT OF HOW PREDICTED TIME WILL BE USED.
+- job created - prediction captured
+- work time starts when worker enters geofence around well / production site
+- if work time exceeds a threshold....manager is notified, dashboard turns geofence to yellow or red
+
 ## Data Source: <a name="data_source"></a>
 ### Engage Mobilize provided a job dataset, which included ~11,000 jobs with 100+ data fields across 3 job types. Each job that was completed included the amount of time it took to complete (i.e., "workTime") which is the target variable.
 
