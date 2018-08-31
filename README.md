@@ -145,6 +145,7 @@ best_rf = rf_random.best_estimator_
 # Predict work time on the test set using the best model, and check the RMSE results
 y_pred_test_s = best_rf.predict(X_test_slick_std)
 test_rmse = np.sqrt(mean_squared_error(y_test_slick, y_pred_test_s))
+```
 - Assessed model results using root mean squared error (RMSE) of the predicted work time vs the actual work time
 - Compared results to mean work time for the equipment type to answer the question on whether a model is more predictive than just simply using the mean for that equipment type to predict work time
 
