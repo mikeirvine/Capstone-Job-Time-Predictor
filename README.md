@@ -165,14 +165,15 @@ test_rmse = np.sqrt(mean_squared_error(y_test_slick, y_pred_test_s))
 rf_s = RandomForestRegressor(n_estimators=600, min_samples_split=10, min_samples_leaf=2, max_features='auto', max_depth=100, bootstrap=True)
 gbr_s = GradientBoostingRegressor(n_estimators=600, min_samples_split=15, min_samples_leaf=8, max_features=None, max_depth=7, learning_rate=0.005)
 ```
-**KEY TAKEAWAYS:**
+Key Takeaways:
 - The best RMSE on the test set for the Random Forest model was **0.354**, and the best for Gradient Boosting was **0.362**, which indicates that both models' predictions, on average, are ***~20 minutes*** off the actual work time value
 - These are very accurate results considering that the average slickline job takes ***3 hours and 20 minutes*** to complete
 - If the mean slickline job work time was used to predict the work time for a job, the RMSE is **0.863**, which is, on average, ***~50 minutes*** off the actual work time value
 - The machine learning models' predictions are more than twice as accurate compared to just using the mean work time, so there is evidence that the features are predictive and there is a benefit to using a machine learning model to predict work time
 
-**What features are the most important in predicting work time?**
+What features are the most important in predicting work time?
 - Looking at the feature importances for the random forest reveals that amount is by far the most importance feature, with the rest of the features providing significantly less impact. Below are the top five in terms of importance.
+
 |**Feature**      | **Importance**  |
 |-----------------|-----------------|
 |Amount           |  0.869          |
