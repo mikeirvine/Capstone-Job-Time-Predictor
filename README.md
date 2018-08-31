@@ -85,6 +85,9 @@ The data provided includes:
 **Insights**:
 - The equipment type for the same job type impacts how long it takes to complete a job
 - However, the standard deviation is significant, which indicates that some service contractors are much faster or slower than others - opportunity to shed light on this to improve service times and narrow the variance
+- See below for a histogram of work times for slickline and water jobs that highlights the variance across jobs
+
+<img src="https://github.com/mikeirvine/Capstone-Job-Time-Predictor/blob/master/imgs/work_time_dist.png">
 
 #### Feature Analysis: 
 - Based on experience, the Engage Mobilize team thought that job type, equipment type, volume, location, and time of year would be the most predictive factors of how long a job should take to complete
@@ -234,5 +237,5 @@ Text
 ## Future Work: <a name="future_work"></a>
 ### Text
 
-- Segment service providers by performance
+- Segment service providers by performance - there's significant std deviation for both water jobs and slickline jobs - may be able to identify companies with a trend of significantly higher work times for the same type of job
 - why is volume not a predictor? likely there's just variance across service providers in terms of performance / efficiency...instead of work time being based on volume
