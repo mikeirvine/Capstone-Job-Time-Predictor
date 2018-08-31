@@ -173,13 +173,13 @@ gbr_s = GradientBoostingRegressor(n_estimators=600, min_samples_split=15, min_sa
 
 **What features are the most important in predicting work time?**
 - Looking at the feature importances for the random forest reveals that amount is by far the most importance feature, with the rest of the features providing significantly less impact. Below are the top five in terms of importance.
-|**Feature** | **Importance** |
-|------------|----------------|
-|Amount      |  0.869          |
-|Business Equipment ID 235      |  0.060          |
-|February     |  0.013          |
-|January      |  0.008          |
-|Region - Other      |  0.005          |
+|**Feature**      | **Importance**  |
+|-----------------|-----------------|
+|Amount           |  0.869          |
+|Equipment ID 235 |  0.060          |
+|February         |  0.013          |
+|January          |  0.008          |
+|Region - Other   |  0.005          |
 
 Question - would adding an estimated volume when the job is created help improve predictions for water jobs? NO improvement for water model, slight improvement for slickline.
 
