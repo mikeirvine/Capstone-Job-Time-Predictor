@@ -165,11 +165,20 @@ test_rmse = np.sqrt(mean_squared_error(y_test_slick, y_pred_test_s))
 rf_s = RandomForestRegressor(n_estimators=600, min_samples_split=10, min_samples_leaf=2, max_features='auto', max_depth=100, bootstrap=True)
 gbr_s = GradientBoostingRegressor(n_estimators=600, min_samples_split=15, min_samples_leaf=8, max_features=None, max_depth=7, learning_rate=0.005)
 ```
-Key Takeaways:
+*Key Takeaways*:
 - The best RMSE on the test set for the Random Forest model was **0.354**, and the best for Gradient Boosting was **0.362**, which indicates that both models' predictions, on average, are ***~20 minutes*** off the actual work time value
 - These are very accurate results considering that the average slickline job takes ***3 hours and 20 minutes*** to complete
 - If the mean slickline job work time was used to predict the work time for a job, the RMSE is **0.863**, which is, on average, ***~50 minutes*** off the actual work time value
 - The machine learning models' predictions are more than twice as accurate compared to just using the mean work time, so there is evidence that the features are predictive and there is a benefit to using a machine learning model to predict work time
+- Detailed results across models against the test set:
+
+|**Model**        | **RMSE**        |
+|-----------------|-----------------|
+|Random Forest    |  0.354          |
+|Gradient Boosting|  0.362          |
+|Linear Regression|  0.440          |
+|Lasso Regression |  0.527          |
+|Slickline Job Mean |  0.863          |
 
 What features are the most important in predicting work time?
 - Looking at the feature importances for the random forest reveals that amount is by far the most importance feature, with the rest of the features providing significantly less impact. Below are the top five in terms of importance.
@@ -182,43 +191,37 @@ What features are the most important in predicting work time?
 |January          |  0.008          |
 |Region - Other   |  0.005          |
 
-Question - would adding an estimated volume when the job is created help improve predictions for water jobs? NO improvement for water model, slight improvement for slickline.
 
-put best params for GB and RF
 
-Summary results by model on test dataset:
 
-|Model |    RMSE 
-|-------|-------------|
-|Linear  |  11.17 |
-|Lasso |      11.18 |
-|Random Forest    |      10.46 |
-|Gradient Boosting     |    12.68  |
-|MLP      |     12.19  |
-|Same Month Avg      |     11.19  |
+#### Water Model:
+- For the water model, a key challenge was not having a numerical feature since 'amount' only applied to slickline jobs, and 'volume' (of barrels of water) is not entered on a job record until after the work time is completed (so it cannot be used in the model as predictions are needed when the job is first created)
+- I tried various combinations of the feature set available for water jobs (region, equipment type, and job month) but each model's performance wasn't any better when compared to the mean work time for a water job
 
-Text
+*Key Takeaways*:
+- The features available to predict water job work time don't add any predictive power beyond just using the mean work time
+- The mean work time RMSE is ***0.648*** which and every model was about the same as each model was basically predicting the mean as well
+- Using the mean work time RMSE is a very *inaccurate* predictor given that the mean work time for a water job is only 0.87 hours
+- My assumption is that service contractor is likely the biggest indicator of work time for a water job as there's is such a wide variance in work time across water jobs
 
-Text
+Would adding an estimated volume when the job is created help improve predictions for water jobs?
+- I attempted putting 'volume' back in the water model just to see if it was an accurate predictor of water job work time
+- Surprisingly, there was NOT any improvement in RMSE for the water model, even when using 'volume'
+- Intuitively, one would think that the number of barrels of water a truck picked up or dropped off would impact the amount of work time, but this is not the case
+- This further validates that service contractor is likely the best predictor as there is a lot of variance across water service contractors in terms of work time
+- Detailed results across models against the test set:
 
-|Feature       |          Correlation    |
-|--------------|-------------------------|
-|units_rented    |                 1|
-|same_month_avg_units_rented   |   0.94|
-|same_month_avg_days_rented   |    0.89|
-|prior_month_units_rented    |     0.82|
-|prior_month_total_days_rented  |  0.78|
-|rental_type_daily           |    -0.16|
-|rental_type_weekly           |   -0.17|
-|prior_month_avg_price_per_day |  -0.18|
+|**Model**        | **RMSE**        |
+|-----------------|-----------------|
+|Random Forest    |  0.649          |
+|Gradient Boosting|  0.663          |
+|Linear Regression|  0.655          |
+|Lasso Regression |  0.656          |
+|Water Job Mean   |  0.648          |
 
-Text
 
-1. same_month_avg_units_rented
-2. same_month_avg_days_rented
-3. prior_month_total_days_rented
-4. prior_month_units_rented
-5. product_type_20-220
+
+
 
 Text
 
@@ -231,4 +234,5 @@ Text
 ## Future Work: <a name="future_work"></a>
 ### Text
 
-Text
+- Segment service providers by performance
+- why is volume not a predictor? likely there's just variance across service providers in terms of performance / efficiency...instead of work time being based on volume
