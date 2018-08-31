@@ -91,6 +91,7 @@ The data provided includes:
 - **Volume**: Slickline and water jobs both use a 'volume' field which indicates the volume of work completed (e.g., volume of water picked up or dropped off at a well or production site). However, this field is NOT entered until AFTER a job is completed, so it cannot be used as a predictor
 - **Equipment Type**: Slickline jobs use 5 types of equipment and water jobs use two types of equipment (although predominantly just one type). This is a critical predictor of work time as different types / sizes of equipment (e.g., size of a water truck) complete different variations of that job type, so work time will vary
 - **Amount**: Amount is only relevant for slickline jobs, and it is the charge per barrel by the service contractor. This information is known when a new job record is created, so it can be used as a predictor
+- **Work Time**: Work time is the amount of time of work it took (not including en route, hauling, or wait times) to complete the job, measured in hours (with decimals every 15 mins (e.g., 1.5 hours is 1 hour and 30 mins)
 
 ## Feature Engineering: <a name="feature_eng"></a>
 ### Feature engineering was limited to creating three types of dummy features based on equipment type, location, and time categorical variables
@@ -104,9 +105,19 @@ The final feature set included: amount, equipment types, region, and month of ye
 ### Approach - *build separate models for water and slickline jobs*:
 Given that the vast majority of the dataset contains only water and slickline jobs, and a key feature (amount) is only available for slickline jobs, I focused on building two separate models - one for slickline jobs and one for water jobs.
 **Steps:**
-- Filtered data to water and slickline jobs only, jobs that were marked as completed, and jobs with a work time value > 0. This reduced the dataset to XXX
-- Calculated 
-- build and tune models
+- Filtered data to water and slickline jobs only, jobs that were marked as completed, and jobs with a work time value > 0. This reduced the dataset to ~2500 slickline jobs and ~3500 water jobs, after outliers +/- 3 standard deviations from the mean were removed
+- Split the dataset into a slickline dataset and a water dataset
+- Removed all fields except for the core feature set, which include features related to amount (slickline only), equipment types, region, and month of year
+- Created dummy features for the categorical features
+- Performed a train / test / split on each dataset, with a test size of 0.25
+```python
+    train_slick_df, test_slick_df = train_test_split(slick_df, test_size=0.25, random_state=42)
+    train_water_df, test_water_df = train_test_split(water_df, test_size=0.25, random_state=42)
+```
+- Scaled / standardized the dataset using Sklearn's Standard Scaler
+- Built 4 models to test results: Linear Regression, Lasso Regression, Random Forest and Gradient Boosting
+- Used Sklearn's RandomizedSearchCV to perform a randomized grid search across parameters for the Random Forest and Gradient Boosting models - used 3 cross validations and 1000 iterations (how many randomized searches to test) to identify optimal parameters
+- Assessed model results using root mean squared error
 - compare results to mean
 
 Key Highlights of Modeling Approach:
@@ -116,6 +127,8 @@ Key Highlights of Modeling Approach:
 ### Text
 
 Question - would adding an estimated volume when the job is created help improve predictions for water jobs? NO improvement for water model, slight improvement for slickline.
+
+put best params for GB and RF
 
 Summary results by model on test dataset:
 
