@@ -116,12 +116,37 @@ Given that the vast majority of the dataset contains only water and slickline jo
 ```
 - Scaled / standardized the dataset using Sklearn's Standard Scaler
 - Built 4 models to test results: Linear Regression, Lasso Regression, Random Forest and Gradient Boosting
-- Used Sklearn's RandomizedSearchCV to perform a randomized grid search across parameters for the Random Forest and Gradient Boosting models - used 3 cross validations and 1000 iterations (how many randomized searches to test) to identify optimal parameters
-- Assessed model results using root mean squared error
-- compare results to mean
-
-Key Highlights of Modeling Approach:
-- Text
+- Used Sklearn's RandomizedSearchCV to perform a randomized grid search across parameters for the Random Forest and Gradient Boosting models - used 3 cross validations and 1000 iterations (how many randomized searches to test) to identify optimal parameters. **Gradient Boosting example:**
+```python
+# Number of trees in random forest
+n_estimators_rf = [int(x) for x in np.linspace(start = 100, stop = 2000, num = 20)]
+# Number of features to consider at every split
+max_features_rf = ['auto', 'sqrt']
+# Maximum number of levels in tree
+max_depth_rf = [int(x) for x in np.linspace(5, 110, num = 15)]
+max_depth_rf.append(None)
+# Minimum number of samples required to split a node
+min_samples_split_rf = [2, 5, 10, 15]
+# Minimum number of samples required at each leaf node
+min_samples_leaf_rf = [1, 2, 4, 8]
+# Method of selecting samples for training each tree
+bootstrap_rf = [True, False]
+# Create the random grid
+random_grid_rf = {'n_estimators': n_estimators_rf, 'max_features': max_features_rf, 'max_depth': max_depth_rf, 'min_samples_split': min_samples_split_rf, 'min_samples_leaf': min_samples_leaf_rf, 'bootstrap': bootstrap_rf}
+# Create the random forest object
+rf = RandomForestRegressor()
+rf_random = RandomizedSearchCV(estimator = rf, param_distributions = random_grid_rf, n_iter = 1000, cv = 3, verbose=2, random_state=42, n_jobs = -1)
+# Fit the random search model
+rf_random.fit(X_train_slick_std, y_train_slick)
+# View the best parameters
+print(rf_random.best_params_)
+# Save the best model (configured with the best performing combination of parameters)
+best_rf = rf_random.best_estimator_
+# Predict work time on the test set using the best model, and check the RMSE results
+y_pred_test_s = best_rf.predict(X_test_slick_std)
+test_rmse = np.sqrt(mean_squared_error(y_test_slick, y_pred_test_s))
+- Assessed model results using root mean squared error (RMSE) of the predicted work time vs the actual work time
+- Compared results to mean work time for the equipment type to answer the question on whether a model is more predictive than just simply using the mean for that equipment type to predict work time
 
 ## Results: <a name="results"></a>
 ### Text
