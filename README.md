@@ -65,10 +65,10 @@ The data provided includes:
 |Slickline|  239           |    2.91 hrs         |       0.68 hrs         |
 |Slickline|  249           |    4.23 hrs         |       0.70 hrs         |
 |Slickline|  250           |    2.54 hrs         |       0.40 hrs         |
-|Slickline - Total|  N/A           |    3.34 hrs         |       1.04 hrs         |
+|*Slickline - Total*|  N/A           |    3.34 hrs         |       1.04 hrs         |
 |Water    |  9             |    3.11 hrs         |       0.50 hrs         |
 |Water    |  161           |    0.86 hrs         |       0.66 hrs         |
-|Water - Total    |  N/A           |    0.87 hrs         |       0.67 hrs         |
+|*Water - Total*    |  N/A           |    0.87 hrs         |       0.67 hrs         |
 
 
 Insights:
