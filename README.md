@@ -41,6 +41,8 @@ INSERT PICTURE
 - With a predicted completion time for each job, Engage Mobilize will use its geo-fencing and time tracking technology to trigger notifications to companies if the job is taking longer than anticipated
 - This insight will help companies better manage operations through increased visibility, efficiency and safefy
 
+***PUT SOMETHING HERE TO SHOW GEOFENCE PICTURE AND HOW IT WORKS***
+
 ## Data Source: <a name="data_source"></a>
 ### Engage Mobilize provided a job dataset, which included ~11,000 jobs with 100+ data fields across 3 job types. Each job that was completed included the amount of time it took to complete (i.e., "workTime") which is the target variable.
 
@@ -60,16 +62,14 @@ The data provided includes:
 |---------|----------------|---------------------|------------------------|
 |Slickline|  226           |    3.33 hrs         |       1.03 hrs         |
 |Slickline|  235           |    4.01 hrs         |       1.20 hrs         |
-|Slickline|  239           |    2.91 hrs         |       0. hrs         |
-|Slickline|  249           |    4.23 hrs         |       1.03 hrs         |
-|Slickline|  250           |    2.54 hrs         |       1.03 hrs         |
-|         |        15.6 |
-|std    |      24.6 |
-|min     |    1  |
-|25%      |     4  |
-|50%       |    8  |
-|75%      |    17  |
-|max      |  300  |
+|Slickline|  239           |    2.91 hrs         |       0.68 hrs         |
+|Slickline|  249           |    4.23 hrs         |       0.70 hrs         |
+|Slickline|  250           |    2.54 hrs         |       0.40 hrs         |
+|Slickline - Total|  N/A           |    3.34 hrs         |       1.04 hrs         |
+|Water    |  9             |    3.11 hrs         |       0.50 hrs         |
+|Water    |  161           |    0.86 hrs         |       0.66 hrs         |
+|Water - Total    |  N/A           |    0.87 hrs         |       0.67 hrs         |
+
 
 Insights:
 - The equipment type for the same job type impacts how long it takes to complete a job
