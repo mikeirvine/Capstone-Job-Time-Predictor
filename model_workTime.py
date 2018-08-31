@@ -6,7 +6,6 @@ from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.model_selection import train_test_split, KFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import RandomizedSearchCV
 
 
 
@@ -133,8 +132,8 @@ class WorkTimeCleaner():
         if model_name == 'slick':
             job_df = self.create_dummies('businessEquipmentID', job_df, 'businessEquipmentID')
             #job_df = self.create_dummies('businessRegionID', job_df, 'businessRegionID')
-            #job_df = self.create_dummies('region', job_df, 'region')
-            #job_df = self.create_dummies('job_month', job_df, 'job_month')
+            job_df = self.create_dummies('region', job_df, 'region')
+            job_df = self.create_dummies('job_month', job_df, 'job_month')
             #job_df = self.create_dummies('wellSite_loc1', job_df, 'wellSite_loc1')
         if model_name == 'water':
             job_df = self.create_dummies('businessEquipmentID', job_df, 'businessEquipmentID')
@@ -258,8 +257,9 @@ if __name__ == '__main__':
     rf_w = RandomForestRegressor(n_estimators=500, max_features='sqrt', n_jobs=-1, min_samples_leaf=4, min_samples_split=8)
     #rf = RandomForestRegressor(n_estimators=200, min_samples_split=5, min_samples_leaf=4, max_features='auto', max_depth=10, bootstrap=True) # best params based on randomized search cv
     gbr_w = GradientBoostingRegressor(n_estimators=500, max_depth=5, learning_rate=.1, max_features='sqrt', min_samples_leaf=4, min_samples_split=8)
-    models_w = [(linear_w, 'Linear - Water'), (lasso_w, 'Lasso - Water'), (rf_w, 'Random Forest - Water'), (gbr_w, 'Gradient Boosting - Water')]
+    models_w = [(linear_w, 'Linear'), (lasso_w, 'Lasso'), (rf_w, 'Random Forest'), (gbr_w, 'Gradient Boosting')]
 
+    print('------------------Water Model Results------------------')
     for model in models_w:
         model[0].fit(X_train_water_std, y_train_water)
         y_pred_train_w = model[0].predict(X_train_water_std)
@@ -282,15 +282,14 @@ if __name__ == '__main__':
         kfold_error = run_k_fold(model[0], X_train_water_std, y_train_water)
         print('{} RMSE k-fold results for water model: {:.3f}'.format(model[1], kfold_error))
 
-    print('----------------------------------------------------')
-
     '''TEST MODELS - SLICK'''
     linear_s = LinearRegression(n_jobs=-1)
     lasso_s = Lasso(alpha=.1)
-    rf_s = RandomForestRegressor(n_estimators=600, min_samples_split=10, min_samples_leaf=2, max_features='auto', max_depth=100, bootstrap=True) # best params based on randomized search cv
-    gbr_s = GradientBoostingRegressor(n_estimators=500, max_depth=5, learning_rate=.1, max_features='sqrt', min_samples_leaf=4, min_samples_split=8)
-    models_s = [(linear_s, 'Linear - Slick'), (lasso_s, 'Lasso - Slick'), (rf_s, 'Random Forest - Slick'), (gbr_s, 'Gradient Boosting - Slick')]
+    rf_s = RandomForestRegressor(n_estimators=600, min_samples_split=10, min_samples_leaf=2, max_features='auto', max_depth=100, bootstrap=True) # best params based on randomized grid search (w/ amount, month, businessEquipmentID, and region as features)
+    gbr_s = GradientBoostingRegressor(n_estimators=600, min_samples_split=15, min_samples_leaf=8, max_features=None, max_depth=7, learning_rate=0.005) # best params from randomized gridsearch (w/ amount, month, businessEquipmentID, and region as features)
+    models_s = [(linear_s, 'Linear'), (lasso_s, 'Lasso'), (rf_s, 'Random Forest'), (gbr_s, 'Gradient Boosting')]
 
+    print('------------------Slickline Model Results------------------')
     for model in models_s:
         model[0].fit(X_train_slick_std, y_train_slick)
         y_pred_train_s = model[0].predict(X_train_slick_std)
@@ -299,9 +298,8 @@ if __name__ == '__main__':
         test_rmse_s = np.sqrt(mean_squared_error(y_test_slick, y_pred_test_s))
         print('{} RMSE train results: {:.3f}'.format(model[1], train_rmse_s))
         print('{} RMSE test results: {:.3f}'.format(model[1], test_rmse_s))
-        #test_job_df.loc[:, 'workTime_pred_' + model[1]] = y_pred_test
-        #test_job_df['workTime_pred_' + model[1]] = y_pred_test
-        #train_job_df['workTime_pred_' + model[1]] = y_pred_train
+        test_slick_df['workTime_pred_' + model[1]] = y_pred_test_s
+        train_slick_df['workTime_pred_' + model[1]] = y_pred_train_s
 
     # calculate rmse workTime_mean as baseline comparison
     y_pred_workTime_mean_s = test_slick_df.loc[:, 'workTime_mean'].values
@@ -312,77 +310,6 @@ if __name__ == '__main__':
     for model in models_s:
         kfold_error = run_k_fold(model[0], X_train_slick_std, y_train_slick)
         print('{} RMSE k-fold results for slick model: {:.3f}'.format(model[1], kfold_error))
-
-    # Random Forest randomized search
-    # Number of trees in random forest
-    n_estimators_rf = [int(x) for x in np.linspace(start = 200, stop = 2000, num = 10)]
-    # Number of features to consider at every split
-    max_features_rf = ['auto', 'sqrt']
-    # Maximum number of levels in tree
-    max_depth_rf = [int(x) for x in np.linspace(10, 110, num = 11)]
-    max_depth_rf.append(None)
-    # Minimum number of samples required to split a node
-    min_samples_split_rf = [2, 5, 10]
-    # Minimum number of samples required at each leaf node
-    min_samples_leaf_rf = [1, 2, 4]
-    # Method of selecting samples for training each tree
-    bootstrap_rf = [True, False]
-    # Create the random grid
-    random_grid_rf = {'n_estimators': n_estimators_rf,
-                   'max_features': max_features_rf,
-                   'max_depth': max_depth_rf,
-                   'min_samples_split': min_samples_split_rf,
-                   'min_samples_leaf': min_samples_leaf_rf,
-                   'bootstrap': bootstrap_rf}
-
-    rf = RandomForestRegressor()
-    rf_random = RandomizedSearchCV(estimator = rf, param_distributions = random_grid_rf, n_iter = 200, cv = 3, verbose=2, random_state=42, n_jobs = -1)
-    # Fit the random search model
-    rf_random.fit(X_train_slick_std, y_train_slick)
-    print(rf_random.best_params_)
-    best_rf = rf_random.best_estimator_
-    y_pred_train_s = best_rf.predict(X_train_slick_std)
-    y_pred_test_s = best_rf.predict(X_test_slick_std)
-    train_rmse = np.sqrt(mean_squared_error(y_train_slick, y_pred_train_s))
-    test_rmse = np.sqrt(mean_squared_error(y_test_slick, y_pred_test_s))
-    print('{} RMSE train results: {:.3f}'.format('Best RF - Slick', train_rmse))
-    print('{} RMSE test results: {:.3f}'.format('Best RF - Slick', test_rmse))
-
-    # Number of trees in gradient boosting
-    n_estimators_gb = [int(x) for x in np.linspace(start = 200, stop = 2000, num = 10)]
-    # Learning rate
-    learning_rate_gb = [x for x in np.linspace(0,.3,10)]
-    # Number of features to consider at every split
-    max_features_gb = ['auto', 'sqrt', None]
-    # Maximum number of levels in tree
-    max_depth_gb = [1,2,3,4,5,6,7,8,9,10]
-    max_depth_gb.append(None)
-    # Minimum number of samples required to split a node
-    min_samples_split_gb = [2, 5, 10]
-    # Minimum number of samples required at each leaf node
-    min_samples_leaf_gb = [1, 2, 4]
-
-    # Create the random grid
-    random_grid_gb = {'n_estimators': n_estimators_gb,
-                   'max_features': max_features_gb,
-                   'max_depth': max_depth_gb,
-                   'min_samples_split': min_samples_split_gb,
-                   'min_samples_leaf': min_samples_leaf_gb}
-
-    gb = GradientBoostingRegressor()
-    gb_random = RandomizedSearchCV(estimator = gb, param_distributions = random_grid_gb, n_iter = 200, cv = 3, verbose=2, random_state=42, n_jobs = -1)
-    # Fit the random search model
-    gb_random.fit(X_train_slick_std, y_train_slick)
-    print(gb_random.best_params_)
-    best_gb = gb_random.best_estimator_
-    y_pred_train_s = best_gb.predict(X_train_slick_std)
-    y_pred_test_s = best_gb.predict(X_test_slick_std)
-    train_rmse = np.sqrt(mean_squared_error(y_train_slick, y_pred_train_s))
-    test_rmse = np.sqrt(mean_squared_error(y_test_slick, y_pred_test_s))
-    print('{} RMSE train results: {:.3f}'.format('Best GB - Slick', train_rmse))
-    print('{} RMSE test results: {:.3f}'.format('Best GB - Slick', test_rmse))
-
-
 
     '''TOMORROW:
     - for rob: look at the rmse of Production Water Bbl vs Slickline
@@ -426,6 +353,8 @@ Readme notes:
 - Through EDA, found that amount (charge per barrel) is only relevant to slickline jobs.
 - Volume is not entered until after the workTime is completed, so cannot be used as a predictor
 - Mean is the best predictor for water, and surprisingly, volume is NOT a good predictor (even if we pretend volume was available when the job was created), which is an interesting finding -- shouldn't the volume of a water job be an indicator of how long the job takes?
+- look at std devs! high std dev indicates some contractors take a long time - lots of variation
+- have a recommendation section
 
 Questions:
 
@@ -587,6 +516,44 @@ Best RF - Slick RMSE test results: 0.390
 {'n_estimators': 200, 'min_samples_split': 10, 'min_samples_leaf': 4, 'max_features': 'sqrt', 'max_depth': 9}
 Best GB - Slick RMSE train results: 0.372
 Best GB - Slick RMSE test results: 0.481
+
+Best Models - GB and RF - Test 3 - Overnight
+- features: amount, businessEquipmentID, region and month
+- GB: {'n_estimators': 200, 'min_samples_split': 2, 'min_samples_leaf': 8, 'max_features': 'sqrt', 'max_depth': 4}
+Best GB - Slick RMSE train results: 0.360
+Best GB - Slick RMSE test results: 0.386
+RF:
+{'n_estimators': 1300,
+ 'min_samples_split': 15,
+ 'min_samples_leaf': 1,
+ 'max_features': 'auto',
+ 'max_depth': 50,
+ 'bootstrap': True}
+
+Best Models - GB - Test 4 (with learning rate)
+- features: amount, businessEquipmentID, region and month
+{'n_estimators': 600, 'min_samples_split': 15, 'min_samples_leaf': 8, 'max_features': None, 'max_depth': 7, 'learning_rate': 0.005}
+Best GB - Slick RMSE train results: 0.367
+Best GB - Slick RMSE test results: 0.362
+
+Best Models - GB - Test 5
+- features: amount, businessEquipmentID
+{'n_estimators': 800, 'min_samples_split': 15, 'min_samples_leaf': 4, 'max_features': 'sqrt', 'max_depth': 8, 'learning_rate': 0.005}
+Best GB - Slick RMSE train results: 0.393
+Best GB - Slick RMSE test results: 0.402
+
+CONCLUSION: month and region features are predictive as both the RF and GB models yield better results when month and region are added as features.
+
+FINAL RUN OF MODELS:
+- features: amount, businessEquipmentID, region and month
+- RF parameters: (n_estimators=600, min_samples_split=10, min_samples_leaf=2, max_features='auto', max_depth=100, bootstrap=True)
+- GB parameters: {'n_estimators': 600, 'min_samples_split': 15, 'min_samples_leaf': 8, 'max_features': None, 'max_depth': 7, 'learning_rate': 0.005}
+- Results:
+Random Forest - Slick RMSE train results: 0.338
+Random Forest - Slick RMSE test results: 0.354
+Gradient Boosting - Slick RMSE train results: 0.367
+Gradient Boosting - Slick RMSE test results: 0.362
+- CONCLUSION - use Random Forest as it has the lowest RMSE. Use amount, businessEquipmentID, region and month as features
 
 
 - build two models, one for slickline and one for water
