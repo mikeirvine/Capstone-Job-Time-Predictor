@@ -40,13 +40,13 @@ INSERT PICTURE
 - Engage Mobilize currently tracks how long a particular job takes, but is not comparing that time to the expected completion time
 - With a predicted completion time for each job, Engage Mobilize will use its geo-fencing and time tracking technology to trigger notifications to companies if the job is taking longer than anticipated
 - This insight will help companies better manage operations through increased visibility, efficiency and safefy
+#### Example of Using Predicted Job Time Completion:
+- When a new job is created, the predictive model(s) will predict an expected time to complete a job (for actual work time - not waiting, driving, hauling, etc.) and that predicted time will be populated on the job record
+- The app uses GPS to track the location of the worker completing the job, so when the worker enters the geo-fence around the job site, the 'work time' clock starts
+- If the work time exceeds the predicted time to complete that job by a certain threshold, the geo-fence around the job site will turn yellow indicated a job is taking longer than predicted. If it exceeds a second threshold, the geo-fence will turn red and a notification will be sent to a manager
+- The service contractors performing the jobs, and the operators overseeing the well or production site will use this information to increase visibility, efficiency, and safety so operations can be better managed
 
 ***PUT SOMETHING HERE TO SHOW GEOFENCE PICTURE AND HOW IT WORKS***
-
-PUT SOMETHING HERE WITH THE CONCEPT OF HOW PREDICTED TIME WILL BE USED.
-- job created - prediction captured
-- work time starts when worker enters geofence around well / production site
-- if work time exceeds a threshold....manager is notified, dashboard turns geofence to yellow or red
 
 ## Data Source: <a name="data_source"></a>
 ### Engage Mobilize provided a job dataset, which included ~11,000 jobs with 100+ data fields across 3 job types. Each job that was completed included the amount of time it took to complete (i.e., "workTime") which is the target variable.
@@ -155,7 +155,22 @@ test_rmse = np.sqrt(mean_squared_error(y_test_slick, y_pred_test_s))
 - Compared results to mean work time for the equipment type to answer the question on whether a model is more predictive than just simply using the mean for that equipment type to predict work time
 
 ## Results: <a name="results"></a>
-### Text
+### After testing various combinations of features and models, a random forest model performed best with the full feature set (amount, region, equipment type, and month) for the slickline jobs, whereas no model could outperform simply using the mean for the water jobs
+#### Slickline Model:
+- I tested various combinations of features (amount, equipment type, region, and month) and various parameters for the Linear, Lasso, Random Forest and Gradient Boosting algorithms
+- Random Forest and Gradient Boosting performed the best, with Random Forest edging out Gradient Boosting by a little
+- Both Random Forest and Gradient Boosting models performed the best with the full feature set, compared to reducing the feature set to just amount and equipment type
+- Optimal parameters were identified using a randomized grid search of 1000 iterations - parameters below:
+```python
+rf_s = RandomForestRegressor(n_estimators=600, min_samples_split=10, min_samples_leaf=2, max_features='auto', max_depth=100, bootstrap=True)
+gbr_s = GradientBoostingRegressor(n_estimators=600, min_samples_split=15, min_samples_leaf=8, max_features=None, max_depth=7, learning_rate=0.005)
+```
+**KEY TAKEAWAYS:**
+- The best RMSE on the test set for the Random Forest model was **0.354**, and the best for Gradient Boosting was **0.362**, which indicates that both models' predictions, on average, are ***~20 minutes*** off the actual work time value
+- These are very accurate results considering that the average slickline job ***3 hours and 20 minutes*** to complete
+- If the mean slickline job work time was used to predict the work time for a job, the RMSE is **0.863**, which is ***~50 minutes*** off the actual work time value
+- The machine learning models are more than twice as accurate as just using the mean work time, so there is evidence that the features are predictive and there is a benefit using a machine learning model to predict work time
+
 
 Question - would adding an estimated volume when the job is created help improve predictions for water jobs? NO improvement for water model, slight improvement for slickline.
 
