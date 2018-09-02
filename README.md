@@ -8,7 +8,6 @@ Galvanize Data Science Immersive - Denver
 ## Executive Summary
 - Text
 
-<img src="hyperlink">
 
 ## Table of Contents
 
@@ -46,7 +45,7 @@ INSERT PICTURE
 - If the work time exceeds the predicted time to complete that job by a certain threshold, the geo-fence around the job site will turn yellow indicated a job is taking longer than predicted. If it exceeds a second threshold, the geo-fence will turn red and a notification will be sent to a manager
 - The service contractors performing the jobs, and the operators overseeing the well or production site will use this information to increase visibility, efficiency, and safety so operations can be better managed
 
-***PUT SOMETHING HERE TO SHOW GEOFENCE PICTURE AND HOW IT WORKS***
+<img src="https://github.com/mikeirvine/Capstone-Job-Time-Predictor/blob/master/imgs/Map%20View%20Snip.png">
 
 ## Data Source: <a name="data_source"></a>
 ### Engage Mobilize provided a job dataset, which included ~11,000 jobs with 100+ data fields across 3 job types. Each job that was completed included the amount of time it took to complete (i.e., "workTime") which is the target variable.
