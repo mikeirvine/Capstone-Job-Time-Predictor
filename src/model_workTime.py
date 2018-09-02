@@ -7,12 +7,9 @@ from sklearn.model_selection import train_test_split, KFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error
 
-
-
 '''
 Script Overview:
-Model.py
-
+Transforms a job dataset, fits a predictive model, and saves the fit model
 '''
 
 class WorkTimeCleaner():
@@ -33,8 +30,8 @@ class WorkTimeCleaner():
 
     def remove_outliers(self, job_df):
         '''
-        Input:
-        Output:
+        Input: job dataframe
+        Output: job dataframe with outliers removed that are +/- 3 standard deviations from the work time mean for that job type and equipment type
         '''
         df_no_outliers = job_df.loc[(job_df['workTime'] >= job_df['workTime_mean'] - 3 * job_df['workTime_std']) & (job_df['workTime'] <= job_df['workTime_mean'] + 3 * job_df['workTime_std']), :]
         return df_no_outliers
@@ -52,8 +49,8 @@ class WorkTimeCleaner():
 
     def calc_mean_std(self, job_df):
         '''
-        Input:
-        Output:
+        Input: job dataframe
+        Output: job dataframe with means and standard deviations added as new fields for each job record. Means and standard deviations are calculated by job type and by equipment type
         '''
         # add mean & std dev columns for each businessEquipmentID to remove outliers
         workTime_stddev = job_df.groupby('businessEquipmentID').agg({'workTime':'std'}).reset_index()
@@ -66,8 +63,8 @@ class WorkTimeCleaner():
 
     def split_location_details(self, job_df):
         '''
-        Input:
-        Output:
+        Input: job dataframe
+        Output: job dataframe with wellSite location field split into multiple fields. Note: wellSite features are not used as features in the final model - used a region features instead based on 'businessRegionID'
         '''
         wellSite_df_loc1 = job_df['wellSite'].str.split(' ', 1, expand=True)
         cols = ['wellSite_loc1', 'wellSite_loc2']
@@ -83,8 +80,8 @@ class WorkTimeCleaner():
 
     def transform(self, job_df, time_df, job_types, cols_to_keep, model_name):
         '''
-        Input:
-        Output:
+        Input: job dataframe, time dataframe, list job types to filter from job dataframe, list of columns to keep, and the name of the model (e.g., 'water' or 'slick')
+        Output: returns a transformed job dataframe with removed columns and new features.
         '''
         # remove jobs that do NOT have a complete status
         job_df = job_df.loc[job_df['status'] == 'complete', :]
@@ -149,8 +146,9 @@ class WorkTimeCleaner():
 
     def get_time_df(self):
         '''
-        Input:
-        Output:
+        Input: none
+        Output: reads the time and latlong source file which includes the start and end time for each timetype (e.g., work, haul, en route, waiting) for each job. Returns a dataframe with the calculated work time for each job in minutes - can be used to compare with the 'workTime' in the other source file
+        NOTE: could not reconcile the work time calculated with the code below, and the work time precalculated in the original dataset - needs more investigation
         '''
         # create time_df, which includes total minutes of workTime
         time_df = pd.read_excel('/Users/mwirvine/Galvanize/dsi-immersive/Capstone-EngageMob-Data/Data Extract 24 Aug.xlsx', 'time and latlong')
@@ -169,22 +167,25 @@ class WorkTimeCleaner():
         return time_df
 
 def run_k_fold(model, X_train, y_train):
-	''' Returns error for k-fold cross validation. '''
-	err, index, num_folds = 0, 0, 5
-	kf = KFold(n_splits=num_folds)
-	error = np.empty(num_folds)
-	for train, test in kf.split(X_train):
-		model.fit(X_train[train], y_train[train])
-		pred = model.predict(X_train[test])
-		error[index] = np.sqrt(mean_squared_error(pred, y_train[test]))
-		index += 1
+    '''
+    Input: instantiated model object, X_train and y_train numpy arrays
+    Output: average error of model after 5 k fold test
+    '''
+    err, index, num_folds = 0, 0, 5
+    kf = KFold(n_splits=num_folds)
+    error = np.empty(num_folds)
+    for train, test in kf.split(X_train):
+        model.fit(X_train[train], y_train[train])
+        pred = model.predict(X_train[test])
+        error[index] = np.sqrt(mean_squared_error(pred, y_train[test]))
+        index += 1
 
-	return np.mean(error)
+    return np.mean(error)
 
 def prepare_Xy(train_df, test_df, cols_to_drop):
     '''
-    Input:
-    Output:
+    Input: train and test dataframes
+    Output: train and test numpy matrices / arrays ready to be inputted into a model
     '''
     features = train_df.drop(cols_to_drop, axis=1).columns
     X_train = train_df.drop(cols_to_drop, axis=1).values
@@ -336,7 +337,7 @@ if __name__ == '__main__':
 '''
 NOTES:
 
-Pre-processiong:
+PRE-PROCESSING:
 - Agreed with Rob to only keep Production Water-Bbl (7593) and Slickline (3280) jobs. They're the vast majority of records (11084)
 - businessEquipmentID is the job type (16 job types; top 6 job types make up most of the jobs. Removed everything but the top 6.
 - status column is the job status - for fitting a model, removed everything that is not a 'complete' status
@@ -348,199 +349,12 @@ Pre-processiong:
 - amount - charge per barrel for slickline jobs ONLY (no values for water jobs) - this feature is known when the job record is created so it can be used as a predictor for slickline - drop for water
 - volume - this is the amount of product that was picked up or dropped off - not filled in by worker until AFTER the work is completed - CANNOT use it model as it's data leakage
 
-Charts:
-- distribution of workTime by businessEquipmentID
-
-
-Questions:
-
-- businessregionid vs wellSite
-- two createdDates - difference?
+OPEN QUESTIONS:
 - for discussion later: cannot get workTime and startTime / endTime for timeType = 'Work' to reconcile. Rob said the issue is likely greater for older dates (platform was new and there were some issues). Can circle back on this question
-- what is quantity?
 
-Model Results:
-NOTE: have a slickline model and a water model
-
-- Test 1: first run on two models
-- Water features: businessEquipmentID dummy
-- Slick features = amount, businessEquipmentID dummy
-Linear - Water RMSE train results: 0.663
-Linear - Water RMSE test results: 0.648
-Lasso - Water RMSE train results: 0.671
-Lasso - Water RMSE test results: 0.656
-Random Forest - Water RMSE train results: 0.664
-Random Forest - Water RMSE test results: 0.650
-Gradient Boosting - Water RMSE train results: 0.663
-Gradient Boosting - Water RMSE test results: 0.648
-workTime mean RMSE results for water model: 0.648
-Linear - Water RMSE k-fold results for water model: 0.662
-Lasso - Water RMSE k-fold results for water model: 0.669
-Random Forest - Water RMSE k-fold results for water model: 0.666
-Gradient Boosting - Water RMSE k-fold results for water model: 0.662
-----------------------------------------------------
-Linear - Slick RMSE train results: 0.549
-Linear - Slick RMSE test results: 0.475
-Lasso - Slick RMSE train results: 0.577
-Lasso - Slick RMSE test results: 0.527
-Random Forest - Slick RMSE train results: 0.408
-Random Forest - Slick RMSE test results: 0.384
-Gradient Boosting - Slick RMSE train results: 0.371
-Gradient Boosting - Slick RMSE test results: 0.512
-workTime mean RMSE results for slick model: 0.863
-Linear - Slick RMSE k-fold results for slick model: 0.555
-Lasso - Slick RMSE k-fold results for slick model: 0.586
-Random Forest - Slick RMSE k-fold results for slick model: 0.439
-Gradient Boosting - Slick RMSE k-fold results for slick model: 0.452
-- CONCLUSION: slick is predictive, particularly because of the 'amount' feature, water model is just predicting the mean
-
-- Test 2: added region as a dummy feature to water - no improvement
-Linear - Water RMSE train results: 0.662
-Linear - Water RMSE test results: 58837013939.158
-Lasso - Water RMSE train results: 0.671
-Lasso - Water RMSE test results: 0.656
-Random Forest - Water RMSE train results: 0.666
-Random Forest - Water RMSE test results: 0.651
-Gradient Boosting - Water RMSE train results: 0.662
-Gradient Boosting - Water RMSE test results: 0.646
-workTime mean RMSE results for water model: 0.648
-Linear - Water RMSE k-fold results for water model: 28739450382.945
-Lasso - Water RMSE k-fold results for water model: 0.669
-Random Forest - Water RMSE k-fold results for water model: 0.667
-Gradient Boosting - Water RMSE k-fold results for water model: 0.661
-
-- Test 3: added job_month as a dummy feature to water, removed region. no improvement
-Linear - Water RMSE train results: 0.654
-Linear - Water RMSE test results: 0.639
-Lasso - Water RMSE train results: 0.671
-Lasso - Water RMSE test results: 0.656
-Random Forest - Water RMSE train results: 0.654
-Random Forest - Water RMSE test results: 0.641
-Gradient Boosting - Water RMSE train results: 0.654
-Gradient Boosting - Water RMSE test results: 0.639
-workTime mean RMSE results for water model: 0.648
-Linear - Water RMSE k-fold results for water model: 0.655
-Lasso - Water RMSE k-fold results for water model: 0.669
-Random Forest - Water RMSE k-fold results for water model: 0.660
-Gradient Boosting - Water RMSE k-fold results for water model: 0.655
-- CONCLUSION: no features can predict water. In presentation, say water predictions should just be the average...but then add volume to show what a volume feature could do
-
-- Test 4: added volume back as a feature to see if it is predictive (even though it's not availble at the time a job is created)
-Linear - Water RMSE train results: 0.659
-Linear - Water RMSE test results: 0.655
-Lasso - Water RMSE train results: 0.671
-Lasso - Water RMSE test results: 0.656
-Random Forest - Water RMSE train results: 0.640
-Random Forest - Water RMSE test results: 0.649
-Gradient Boosting - Water RMSE train results: 0.624
-Gradient Boosting - Water RMSE test results: 0.663
-workTime mean RMSE results for water model: 0.648
-Linear - Water RMSE k-fold results for water model: 0.663
-Lasso - Water RMSE k-fold results for water model: 0.669
-Random Forest - Water RMSE k-fold results for water model: 0.658
-Gradient Boosting - Water RMSE k-fold results for water model: 0.663
-CONCLUSION - found that volume is NOT a predictor...best predictor is just the average (region, month don't have an impact either)
-
-SLICK ONLY
-
-- Test 5: added region as a dummy feature (also with businessEquipmentID dummy)
-Linear - Slick RMSE train results: 0.544
-Linear - Slick RMSE test results: 0.470
-Lasso - Slick RMSE train results: 0.577
-Lasso - Slick RMSE test results: 0.527
-Random Forest - Slick RMSE train results: 0.425
-Random Forest - Slick RMSE test results: 0.428
-Gradient Boosting - Slick RMSE train results: 0.348
-Gradient Boosting - Slick RMSE test results: 0.469
-workTime mean RMSE results for slick model: 0.863
-Linear - Slick RMSE k-fold results for slick model: 0.553
-Lasso - Slick RMSE k-fold results for slick model: 0.586
-Random Forest - Slick RMSE k-fold results for slick model: 0.471
-Gradient Boosting - Slick RMSE k-fold results for slick model: 0.466
-- CONCLUSION: no improvement (rf got worse actually) when adding region
-
-- Test 6: added month as a dummy, removed region
-Linear - Slick RMSE train results: 0.534
-Linear - Slick RMSE test results: 0.444
-Lasso - Slick RMSE train results: 0.577
-Lasso - Slick RMSE test results: 0.527
-Random Forest - Slick RMSE train results: 0.403
-Random Forest - Slick RMSE test results: 0.426
-Gradient Boosting - Slick RMSE train results: 0.321
-Gradient Boosting - Slick RMSE test results: 0.409
-workTime mean RMSE results for slick model: 0.863
-Linear - Slick RMSE k-fold results for slick model: 0.545
-Lasso - Slick RMSE k-fold results for slick model: 0.586
-Random Forest - Slick RMSE k-fold results for slick model: 0.465
-Gradient Boosting - Slick RMSE k-fold results for slick model: 0.444
-- CONCLUSION: region does improve for gradient boosting
-
-- Test 7: added month and region as dummies
-Linear - Slick RMSE train results: 0.530
-Linear - Slick RMSE test results: 0.440
-Lasso - Slick RMSE train results: 0.577
-Lasso - Slick RMSE test results: 0.527
-Random Forest - Slick RMSE train results: 0.435
-Random Forest - Slick RMSE test results: 0.460
-Gradient Boosting - Slick RMSE train results: 0.303
-Gradient Boosting - Slick RMSE test results: 0.398
-workTime mean RMSE results for slick model: 0.863
-Linear - Slick RMSE k-fold results for slick model: 0.542
-Lasso - Slick RMSE k-fold results for slick model: 0.586
-Random Forest - Slick RMSE k-fold results for slick model: 0.501
-Gradient Boosting - Slick RMSE k-fold results for slick model: 0.445
-CONCLUSION: GB is getting much better...grid search it.
-
-BEST MODELS:
-RF (0.384) with only amount and businessEquipmentID
-GB (0.398) with amount, businessEquipmentID, region and month
-
-Best Models - GB and RF - TEST 1
-- features: amount, businessEquipmentID, region and month
-- RF: {'n_estimators': 600, 'min_samples_split': 10, 'min_samples_leaf': 2, 'max_features': 'auto', 'max_depth': 100, 'bootstrap': True}
-Best RF - Slick RMSE train results: 0.340
-Best RF - Slick RMSE test results: 0.353
-- GB: {'n_estimators': 200, 'min_samples_split': 5, 'min_samples_leaf': 2, 'max_features': 'sqrt', 'max_depth': 3}
-Best GB - Slick RMSE train results: 0.362
-Best GB - Slick RMSE test results: 0.373
-
-Best Models - GB and RF - TEST 2
-- features: amount, businessEquipmentID
-{'n_estimators': 800, 'min_samples_split': 5, 'min_samples_leaf': 1, 'max_features': 'sqrt', 'max_depth': 100, 'bootstrap': False}
-Best RF - Slick RMSE train results: 0.369
-Best RF - Slick RMSE test results: 0.390
-{'n_estimators': 200, 'min_samples_split': 10, 'min_samples_leaf': 4, 'max_features': 'sqrt', 'max_depth': 9}
-Best GB - Slick RMSE train results: 0.372
-Best GB - Slick RMSE test results: 0.481
-
-Best Models - GB and RF - Test 3 - Overnight
-- features: amount, businessEquipmentID, region and month
-- GB: {'n_estimators': 200, 'min_samples_split': 2, 'min_samples_leaf': 8, 'max_features': 'sqrt', 'max_depth': 4}
-Best GB - Slick RMSE train results: 0.360
-Best GB - Slick RMSE test results: 0.386
-RF:
-{'n_estimators': 1300,
- 'min_samples_split': 15,
- 'min_samples_leaf': 1,
- 'max_features': 'auto',
- 'max_depth': 50,
- 'bootstrap': True}
-
-Best Models - GB - Test 4 (with learning rate)
-- features: amount, businessEquipmentID, region and month
-{'n_estimators': 600, 'min_samples_split': 15, 'min_samples_leaf': 8, 'max_features': None, 'max_depth': 7, 'learning_rate': 0.005}
-Best GB - Slick RMSE train results: 0.367
-Best GB - Slick RMSE test results: 0.362
-
-Best Models - GB - Test 5
-- features: amount, businessEquipmentID
-{'n_estimators': 800, 'min_samples_split': 15, 'min_samples_leaf': 4, 'max_features': 'sqrt', 'max_depth': 8, 'learning_rate': 0.005}
-Best GB - Slick RMSE train results: 0.393
-Best GB - Slick RMSE test results: 0.402
-
-CONCLUSION: month and region features are predictive as both the RF and GB models yield better results when month and region are added as features.
-
-FINAL RUN OF MODELS:
+MODEL RESULTS:
+- Key note: decided to have separate models for water and slickline. Separate models are producing better results than trying to have a combined model. Recommend to have a distinct model for each job type.
+Final run of models:
 - features: amount, businessEquipmentID, region and month
 - RF parameters: (n_estimators=600, min_samples_split=10, min_samples_leaf=2, max_features='auto', max_depth=100, bootstrap=True)
 - GB parameters: {'n_estimators': 600, 'min_samples_split': 15, 'min_samples_leaf': 8, 'max_features': None, 'max_depth': 7, 'learning_rate': 0.005}
@@ -549,14 +363,7 @@ Random Forest - Slick RMSE train results: 0.338
 Random Forest - Slick RMSE test results: 0.354
 Gradient Boosting - Slick RMSE train results: 0.367
 Gradient Boosting - Slick RMSE test results: 0.362
-- CONCLUSION - use Random Forest as it has the lowest RMSE. Use amount, businessEquipmentID, region and month as features
-
-
-- build two models, one for slickline and one for water
-- slickline looks to be predictive
-- if water is not predictive, then STILL use volume (but tell ROB that this is what he could predict if he had some sort of volume estimate). water estimate might be best just using the average. can present how volume could be predictive for water model and slick model IF Rob gathered an estimate when job was created
-
-
+- CONCLUSION - use Random Forest as it has the lowest RMSE. Use amount, businessEquipmentID, region and month as features as using these features produces better results than a subset of the features
 
 pd.options.mode.chained_assignment = None
 
