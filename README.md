@@ -6,8 +6,14 @@ August 31, 2018
 Galvanize Data Science Immersive - Denver
 
 ## Executive Summary
-- Text
-
+- How long should it take to complete a job at a production or well site? This is the question that Engage Mobilize, a digital field ticking solution provider, wants to share with its operator and service contractor customers to further improve the transparency of field operations.
+- The objective of the project is to build a model to predict the amount of work time required to complete a particular job at a well or production site.
+- Engage Mobilize provided a job dataset, which included ~11,000 jobs with 100+ data fields across 3 job types. Each job that was completed included the amount of time it took to complete (i.e., "workTime") which is the target variable.
+- EDA revealed that ~90% of the jobs were water and slickline job types, and about half of those jobs had a completed status and a work time value > 0. For each equipment type, the mean time to complete a water job is 0.87 hrs and a slickline job is 3.34 hrs.
+- Feature engineering was limited to creating three types of dummy features based on equipment type, location, and time categorical variables.
+- Based on findings from feature analysis and EDA, I developed separate models for water jobs and slickline jobs and attempted to tune each model with various combinations of features, algorithms, and hyperparameters.
+- After testing various combinations of features and models, a random forest model performed best with the full feature set (amount, region, equipment type, and month) for the slickline jobs, whereas no model could outperform simply using the mean for the water jobs.
+- The next steps are to embed the model and the job time predictive feature into Engage Mobilize's platform, and to further analyze the drivers behind job completion to identify additional insights.
 
 ## Table of Contents
 
@@ -21,9 +27,7 @@ Galvanize Data Science Immersive - Denver
 8. [References](#references)
 
 ## Context & Key Question: <a name="context_key_question"></a>
-### How long should it take to complete a job at a production or well site? This is the question that Engage Mobilize, a digital field ticking solution provider, wants to share with its operator and service contractor customers to further improve the transparency of field operations.
-
-INSERT PICTURE
+### How long should it take to complete a job at a production or well site? This is the question that Engage Mobilize, a digital field ticking solution provider, wants to share with its operator and service contractor customers to further improve the transparency of field operations. The objective of the project is to build a model to predict the amount of work time required to complete a particular job at a well or production site.
 
 #### Background:
 - The oil and natural gas industry in the US is currently experiencing a wave of technology innovation that is rapidly decreasing the cost to drill
@@ -39,7 +43,7 @@ INSERT PICTURE
 - Engage Mobilize currently tracks how long a particular job takes, but is not comparing that time to the expected completion time
 - With a predicted completion time for each job, Engage Mobilize will use its geo-fencing and time tracking technology to trigger notifications to companies if the job is taking longer than anticipated
 - This insight will help companies better manage operations through increased visibility, efficiency and safefy
-#### Example of Using Predicted Job Time Completion:
+#### Example of Using Job Time Completion Prediction:
 - When a new job is created, the predictive model(s) will predict an expected time to complete a job (for actual work time - not waiting, driving, hauling, etc.) and that predicted time will be populated on the job record
 - The app uses GPS to track the location of the worker completing the job, so when the worker enters the geo-fence around the job site, the 'work time' clock starts
 - If the work time exceeds the predicted time to complete that job by a certain threshold, the geo-fence around the job site will turn yellow indicated a job is taking longer than predicted. If it exceeds a second threshold, the geo-fence will turn red and a notification will be sent to a manager
@@ -101,7 +105,7 @@ The data provided includes:
 - **Work Time**: Work time is the amount of time of work it took (not including en route, hauling, or wait times) to complete the job, measured in hours (with decimals every 15 mins (e.g., 1.5 hours is 1 hour and 30 mins)
 
 ## Feature Engineering: <a name="feature_eng"></a>
-### Feature engineering was limited to creating three types of dummy features based on equipment type, location, and time categorical variables
+### Feature engineering was limited to creating three types of dummy features based on equipment type, location, and time categorical variables.
 - **Equipment Type**: Created dummy features based on the equipment type categorical variable (5 equipment type dummy features for slickline jobs and 2 equipment type dummy features for water jobs
 - **Location**: Each job had high level and detailed location information, so I focused on creating dummy variables for the region location variable. Most jobs are located in 5 regions, and the rest are located across a few dozen regions. I created dummy features for the top 5 regions and then created an 'other' region for all other jobs.
 - **Time**: Each job has a created date, and since the time of year may impact work time, I created a dummy feature for the month of year
@@ -109,7 +113,9 @@ The data provided includes:
 The final feature set included: amount, equipment types, region, and month of year. As I tested models (details below), I tested different combinations of the feature set to see which combination optimized the models.
 
 ## Modeling: <a name="modeling"></a>
-### Approach - *build separate models for water and slickline jobs*:
+### Based on findings from feature analysis and EDA, I developed separate models for water jobs and slickline jobs and attempted to tune each model with various combinations of features, algorithms, and hyperparameters.
+
+#### Approach - *build separate models for water and slickline jobs*:
 Given that the vast majority of the dataset contains only water and slickline jobs, and a key feature (amount) is only available for slickline jobs, I focused on building two separate models - one for slickline jobs and one for water jobs.
 **Steps:**
 - Filtered data to water and slickline jobs only, jobs that were marked as completed, and jobs with a work time value > 0. This reduced the dataset to ~2500 slickline jobs and ~3500 water jobs, after outliers +/- 3 standard deviations from the mean were removed
@@ -157,7 +163,7 @@ test_rmse = np.sqrt(mean_squared_error(y_test_slick, y_pred_test_s))
 - Compared results to mean work time for the equipment type to answer the question on whether a model is more predictive than just simply using the mean for that equipment type to predict work time
 
 ## Results: <a name="results"></a>
-### After testing various combinations of features and models, a random forest model performed best with the full feature set (amount, region, equipment type, and month) for the slickline jobs, whereas no model could outperform simply using the mean for the water jobs
+### After testing various combinations of features and models, a random forest model performed best with the full feature set (amount, region, equipment type, and month) for the slickline jobs, whereas no model could outperform simply using the mean for the water jobs.
 #### Slickline Model:
 - I tested various combinations of features (amount, equipment type, region, and month) and various parameters for the Linear, Lasso, Random Forest and Gradient Boosting algorithms
 - Random Forest and Gradient Boosting performed the best, with Random Forest edging out Gradient Boosting by a little in terms of RMSE
@@ -205,12 +211,6 @@ Below are plots of the random forest model's predicted work times vs actual work
 - The mean work time RMSE is ***0.648*** which and every model was about the same as each model was basically predicting the mean as well
 - Using the mean work time RMSE is a very *inaccurate* predictor given that the mean work time for a water job is only 0.87 hours
 - My assumption is that service contractor is likely the biggest indicator of work time for a water job as there's is such a wide variance in work time across water jobs
-
-Would adding an estimated volume when the job is created help improve predictions for water jobs?
-- I attempted putting 'volume' back in the water model just to see if it was an accurate predictor of water job work time
-- Surprisingly, there was NOT any improvement in RMSE for the water model, even when using 'volume'
-- Intuitively, one would think that the number of barrels of water a truck picked up or dropped off would impact the amount of work time, but this is not the case
-- This further validates that service contractor is likely the best predictor as there is a lot of variance across water service contractors in terms of work time
 - Detailed results across models against the test set:
 
 |**Model**        | **RMSE**        |
@@ -221,20 +221,22 @@ Would adding an estimated volume when the job is created help improve prediction
 |Lasso Regression |  0.656          |
 |Water Job Mean   |  0.648          |
 
-
-
-
-
-Text
-
-<img src="hyperlink">
-
-Text
-
-<img src="hyperlink">
+Would adding an estimated volume when the job is created help improve predictions for water jobs?
+- I attempted putting 'volume' back in the water model just to see if it was an accurate predictor of water job work time
+- Surprisingly, there was NOT any improvement in RMSE for the water model, even when using 'volume'
+- Intuitively, one would think that the number of barrels of water a truck picked up or dropped off would impact the amount of work time, but this is not the case
+- This further validates that service contractor is likely the best predictor as there is a lot of variance across water service contractors in terms of work time
 
 ## Future Work: <a name="future_work"></a>
-### Text
+### The next steps are to embed the model and the job time predictive feature into Engage Mobilize's platform, and to further analyze the drivers behind job completion to identify additional insights.
+**Platform Updates:**
+- Slickline Jobs: Embed the slickline work time completion model in the Engage Mobilize platform to enable the new notification and geo-fence features
+- Water Jobs: Predict water job completion time by just using a simple average, which can also be used to enable the new notification and geo-fence features for water jobs
+- Build models for other job types so every job type can have a predict completion time
+**Work Time Analysis:**
+- This project revealed that there is significant variance with work completion time for both slickline and water jobs, and for water jobs in particular, the variation is not due to the volume of barrels that are picked up / dropped off
+- Segment service providers by performance (e.g., average work time by job type) for both slickline and water jobs - may be able to identify service contractors with a trend of significantly higher work times for the same type of job
+- Potentially use service provider segmentation to recommend / rate companies using a benchmark against industry averages by job type
 
-- Segment service providers by performance - there's significant std deviation for both water jobs and slickline jobs - may be able to identify companies with a trend of significantly higher work times for the same type of job
-- why is volume not a predictor? likely there's just variance across service providers in terms of performance / efficiency...instead of work time being based on volume
+## References: <a name="references"></a>
+- Thank you to the Engage Mobilize team for giving me the opportunity to work on the project
