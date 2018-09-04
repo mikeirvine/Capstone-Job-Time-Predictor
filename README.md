@@ -6,7 +6,7 @@ August 31, 2018
 Galvanize Data Science Immersive - Denver
 
 ## Executive Summary
-- How long should it take to complete a job at a production or well site? This is the question that Engage Mobilize, a digital field ticking solution provider, wants to share with its operator and service contractor customers to further improve the transparency of field operations.
+- How long should it take to complete a job at a production or well site? This is the question that Engage Mobilize, a digital field ticketing solution provider, wants to share with its operator and service contractor customers to further improve the transparency of field operations.
 - The objective of the project was to build a model to predict the amount of work time required to complete a particular job at a well or production site.
 - Engage Mobilize provided a job dataset, which included ~11,000 jobs with 100+ data fields across several job types. Each job that was completed included the amount of work time it took to complete (i.e., "workTime") which is the target variable.
 - EDA revealed that ~90% of the jobs were water and slickline job types, and about half of those jobs had a completed status and a work time value > 0. For each equipment type, the mean time to complete a water job is 0.87 hrs and a slickline job is 3.34 hrs.
