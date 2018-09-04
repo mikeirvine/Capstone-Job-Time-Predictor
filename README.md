@@ -233,6 +233,7 @@ Would adding an estimated volume when the job is created help improve prediction
 - Slickline Jobs: Embed the slickline work time completion model in the Engage Mobilize platform to enable the new notification and geo-fence features
 - Water Jobs: Predict water job completion time by just using a simple average, which can also be used to enable the new notification and geo-fence features for water jobs
 - Build models for other job types so every job type can have a predicted completion time
+
 **Work Time Analysis:**
 - This project revealed that there is significant variance with work completion time for both slickline and water jobs
 - For water jobs in particular, the variation is not due to the volume of barrels that are picked up / dropped off
